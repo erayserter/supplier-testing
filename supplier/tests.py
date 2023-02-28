@@ -2,9 +2,7 @@ from django.test import TestCase
 
 from rest_framework import status
 
-import json
 import requests
-
 
 AMOUNT_BOUNDARY = 9999
 
@@ -18,7 +16,7 @@ class CreateSupplierApplicationTests(TestCase):
             "failure_url": "http://www.supplier.com/failure/",
             "currency": "GBP",
             "order_reference": "26352",
-            "signature": "82c1c78b4c7e776de2d30dd888298c8812757aa4265f47258a9146e56ea1858c",
+            "signature": "82c1c78b4c7e776de2d30dd888298c8812757aa4265f47258a9146e56ea1858c",  # TODO: signature i al
             "first_name": "Rejecttest",
             "last_name": "Rejecttest",
             "product_description": [
@@ -60,52 +58,31 @@ class CreateSupplierApplicationTests(TestCase):
         self.assertIsNotNone(data.get('data').get('redirect_url'))
 
     def test_invalid_api_key(self):
-        self.data['api_key'] = "123"
-
-        response = self.post_data()
-        data = response.json()  # TODO: this will be response.data after request will be implemented with Client class.
-
-        self.bad_request(response, data, "API Key provided is Invalid")
+        self.bad_request('api_key', '123', "API Key provided is Invalid")
 
     def test_invalid_signature(self):
-        self.data['signature'] = "123"
-
-        response = self.post_data()
-        data = response.json()  # TODO: this will be response.data after request will be implemented with Client class.
-
-        self.bad_request(response, data, "Signature provided is Invalid")
+        self.bad_request('signature', '123', "Signature provided is Invalid")
 
     def test_amount_gt_boundary(self):
-        self.data['amount'] = f"{AMOUNT_BOUNDARY + 1}.00"
-
-        print(self.data)
-        response = self.post_data()
-        data = response.json()  # TODO: this will be response.data after request will be implemented with Client class.
-
-        self.bad_request(response, data, "Amount provided is Invalid")
+        self.bad_request('amount', f"{AMOUNT_BOUNDARY + 1}.00", "Amount provided is Invalid")
 
     def test_invalid_currency(self):
-        self.data['currency'] = "TR"
-
-        response = self.post_data()
-        data = response.json()
-
-        self.bad_request(response, data, "Currency provided is Invalid")
+        self.bad_request('currency', "TL", "Currency provided is Invalid")
 
     def test_empty_product_description(self):
-        self.data['product_description'] = []
-
-        response = self.post_data()
-        data = response.json()
-
-        self.bad_request(response, data, "Product Description provided is Invalid")
+        self.bad_request('product_description', [], "Product Description provided is Invalid")
 
     # ------------------- TEST HELPERS -------------------
 
-    def bad_request(self, response, data, message):
+    def bad_request(self, field, replacement, message):
+        self.data[field] = replacement
+
+        response = self.post_data()
+        response_data = response.json()  # TODO: this will be response.data after request will be implemented with Client class.
+
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertFalse(data.get('success'))
-        self.assertEqual(data.get("message"), message)
+        self.assertFalse(response_data.get('success'))
+        self.assertEqual(response_data.get("message"), message)
 
     def post_data(self):
         # TODO: this will be implemented with self.client.post.
