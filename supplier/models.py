@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils import timezone
 
 
 class Country(models.Model):
@@ -59,11 +60,13 @@ class SupplierApplication(models.Model):
                                  on_delete=models.DO_NOTHING)
     dealership = models.ForeignKey(Dealership, related_name='sa_dealership', blank=False, null=False,
                                    on_delete=models.DO_NOTHING)
+    expired = models.BooleanField(default=False)
+    token = models.CharField(max_length=36)
+    signature = models.CharField(max_length=300)
     amount = models.DecimalField(max_digits=7, decimal_places=2, blank=True, null=True)
     currency = models.CharField(max_length=4, blank=True, null=True)
     supplier_success_url = models.CharField(max_length=1000)
     supplier_failure_url = models.CharField(max_length=1000)
-    signature = models.CharField(max_length=300)
     forename = models.CharField(max_length=254, blank=True, null=True)
     surname = models.CharField(max_length=254, blank=True, null=True)
     email = models.EmailField(max_length=254, blank=True, null=True)
@@ -83,3 +86,10 @@ class SupplierApplication(models.Model):
                                             on_delete=models.DO_NOTHING)
     application = models.ForeignKey(Application, related_name='sa_application', blank=True, null=True,
                                     on_delete=models.DO_NOTHING)
+
+
+class AssociatedSupplierDealerships(models.Model):
+    supplier = models.ForeignKey(Supplier, related_name='associated_sd_supplier', blank=False, on_delete=models.DO_NOTHING)
+    dealership = models.ForeignKey(Dealership, related_name='associated_sd_dealership', blank=False, on_delete=models.DO_NOTHING)
+    apikey = models.CharField(max_length=30, unique=True)
+    live_date = models.DateField(default=timezone.now)
