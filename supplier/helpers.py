@@ -3,11 +3,10 @@ from rest_framework import status
 import requests
 
 
-def bad_request(test_case, field, replacement, message, post=False):
-    test_case.data[field] = replacement
-
+def bad_request(test_case, message, post=False):
     response = request_with_data(test_case, post)
-    response_data = response.json()  # TODO: this will be response.data after request will be implemented with Client class.
+    # TODO: this will be response.data after request will be implemented with Client class.
+    response_data = response.json()
 
     test_case.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
     test_case.assertFalse(response_data.get('success'))

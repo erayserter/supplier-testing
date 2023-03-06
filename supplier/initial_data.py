@@ -5,7 +5,7 @@ CREATE_APPLICATION_DATA = {
     "failure_url": "http://www.supplier.com/failure/",
     "currency": "GBP",
     "order_reference": "26352",
-    "signature": "82c1c78b4c7e776de2d30dd888298c8812757aa4265f47258a9146e56ea1858c",  # TODO: signature i al
+    "signature": "7f9dd72e16f4185e17ce23015aba12bd6af5ba85f88023a913f79a519630fe63",
     "first_name": "Rejecttest",
     "last_name": "Rejecttest",
     "product_description": [
@@ -31,11 +31,18 @@ CREATE_APPLICATION_DATA = {
     "town": "Southampton",
     "county": "Hampshire",
     "postcode": "SO14 3AB",
-    "country": "UK",
+    "country": "UK"
 }
 
 STATUS_DATA = {
     "api_key": "1Ukc34RhCa9FCdmusi6t9SjR",
     "token": "d35c76532ea44ff0b5e",
-    "signature": "e768335bf3f3f7f75a532745ac0cb6af0bd5294fa26627b1b565c77aa516cbfc",
+    "signature": "858239f89802a1f70218a3b85752529d0c469ade1780f7ba3fcd6d033210b546"
+}
+
+UPDATE_DATA = {
+    "token": "2d9d12038c7d453d82e597db2d60e8fe",
+    "api_key": "7BY9htbgf5GRLr8GHbrHvsU5",
+    "signature": "8d2b9c83777eecc695e82b18b7422b1cbad62ad5492d88f5091ee390df1440cc",
+    "amount": 150
 }
