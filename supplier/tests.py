@@ -166,7 +166,7 @@ class StatusApplicationTest(TestCase):
         self.data = json.load(open('supplier/datas/status_data.json', 'r'))
         self.url = "https://dev.bumper.co.uk/core/api/supplier/status/v1/"
 
-    def test_valid_data(self):
+    def test_valid_data_completed(self):
         response = request_with_data(self)
         data = response.json()  # TODO: this will be response.data after request will be implemented with Client class.
 
@@ -192,7 +192,7 @@ class StatusApplicationTest(TestCase):
         del self.data['token']
         self.data['bumper_reference'] = 156284
         self.data['signature'] = '5e7455b616d651ee07350b1688ec234ce16cc9597e72be84b9daa545b8853ef0'
-        self.test_valid_data()
+        self.test_valid_data_completed()
 
     def test_invalid_customer_reference(self):
         del self.data['token']
@@ -278,6 +278,16 @@ class UpdateApplicationTest(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(data.get('success'), True)
 
+    def test_pending_gt_boundary(self):
+        self.data['amount'] = "5001"
+        self.data['signature'] = "bc956431d43096ad2be4699723ab02721fcc2ff25ea496cfb0e367c74b69048f"
+        bad_request(self, post=True)
+
+    def test_pending_lt_boundary(self):
+        self.data['amount'] = "0"
+        self.data['signature'] = "2338f1c1f05bb8540012da69e7b0ffd5e4d72a0b95331c1d822a89f6af44ce5f"
+        bad_request(self, post=True)
+
     def test_completed(self):
         self.data['token'] = '344b73ae65e44b2abbf'
         self.data['signature'] = 'c90403d938cdba9ebf8e05f1d676bd71bed53e7e490e28bee83f67803a0f2924'
@@ -298,8 +308,9 @@ class UpdateApplicationTest(TestCase):
 
     def test_invalid_bumper_reference(self):
         self.data['bumper_reference'] = "0"
-        self.data['signature'] = '4f6a5b81fba4bf83e534aca06ae99356b2812c0cf3caea217b86459ae06c5581'
+        self.data['signature'] = 'd77d843d428cad0b6b50a91066e5ab25309c2cb6e7382b53c90d918fa1c804bd'
         del self.data['token']
+        bad_request(self, post=True)
 
     def test_invalid_signature(self):
         self.data['signature'] = 'e768335bf3f3f7f75a532745ac0cb6af0bd5294fa26627b1b565c77aa516cbfc'
@@ -311,15 +322,5 @@ class UpdateApplicationTest(TestCase):
 
     def test_invalid_token(self):
         self.data['token'] = '123'
-        self.data['signature'] = 'e967dbcfc9e49fc4879ad84f9302772862891ebda7a48a985c2019da559a5ffb'
-        bad_request(self, post=True)
-
-    def test_amount_gt_boundary(self):
-        self.data['amount'] = "5001"
-        self.data['signature'] = "24644e4c9efdf96dcb1a33713613f7db9802d78daffa59bd05d6ec6cd11faa2a"
-        bad_request(self, post=True)
-
-    def test_amount_lt_boundary(self):
-        self.data['amount'] = "0"
-        self.data['signature'] = "e8e88f4001702fc92607b6ff0273915c5591fbcab15b0552cf915cb3ab558f2b"
+        self.data['signature'] = '28afeda6cff7b815e6d658881cfb16c26db085f120af20f91def0b987900e5e3'
         bad_request(self, post=True)
