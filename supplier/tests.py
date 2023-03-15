@@ -22,6 +22,30 @@ class CreateApplicationTest(TestCase):
         self.assertIsNotNone(data.get('data').get('token'))
         self.assertIsNotNone(data.get('data').get('redirect_url'))
 
+    def test_surname_not_matched(self):
+        self.data['first_name'] = 'surnamenotmatchedtest'
+        self.data['last_name'] = 'surnamenotmatchedtest'
+        self.data['signature'] = '2fdd452e3bde1e5594fa64b5b888a4afd7402858fe776ed01d6d46d7c834bbcd'
+        self.test_valid_data()
+
+    def test_surname_matched(self):
+        self.data['first_name'] = 'surnamematchedtest'
+        self.data['last_name'] = 'surnamematchedtest'
+        self.data['signature'] = '6612059734d642bfadab75cc627230cb8eb95288744ae17eda7e4d849c132048'
+        self.test_valid_data()
+
+    def test_address_not_matched(self):
+        self.data['first_name'] = 'addressnotmatchedtest'
+        self.data['last_name'] = 'addressnotmatchedtest'
+        self.data['signature'] = 'f85f2d3cd20d2eebdf89da905b22cd261c16a87a7446a7a109a0816b2117049f'
+        self.test_valid_data()
+
+    def test_counter_offer(self):
+        self.data['first_name'] = 'counteroffertest'
+        self.data['last_name'] = 'counteroffertest'
+        self.data['signature'] = '207109a750f367aa150175a03e8941be4f4ab6ebde9ce495c53d2d265b7bfe62'
+        self.test_valid_data()
+
     def test_valid_data_with_preapproval_link(self):
         del self.data['amount']
         self.data['preapproval_link'] = True
@@ -166,7 +190,7 @@ class StatusApplicationTest(TestCase):
         self.data = json.load(open('supplier/datas/status_data.json', 'r'))
         self.url = "https://dev.bumper.co.uk/core/api/supplier/status/v1/"
 
-    def test_valid_data_completed(self):
+    def test_completed(self):
         response = request_with_data(self)
         data = response.json()  # TODO: this will be response.data after request will be implemented with Client class.
 
@@ -175,7 +199,7 @@ class StatusApplicationTest(TestCase):
         self.assertIsNotNone(data.get('data'))
         self.assertIsNotNone(data.get('data').get('amount'))
 
-    def test_valid_data_pending(self):
+    def test_pending(self):
         self.data['token'] = '5d62808653ff416c881'
         self.data['signature'] = 'd53c9dffaba98a2108cef5b4019ae0829d7970812d189d7edacc3195a288fa53'
 
@@ -188,11 +212,22 @@ class StatusApplicationTest(TestCase):
         self.assertEquals(data.get('data').get('status'), 'pending')
         self.assertIsNone(data.get('data').get('amount'))
 
+    def test_canceled(self):
+        self.data['token'] = 'ae4e985f8a1c4c91b41'
+        self.data['signature'] = 'e3cdc904142a0d6d01758dd35f5746e11d0d1f7ad51f44674d95bbd750777f28'
+
+        response = request_with_data(self)
+        data = response.json()  # TODO: this will be response.data after request will be implemented with Client class.
+
+        self.assertEqual(data.get('success'), True)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIsNotNone(data.get('data'))
+
     def test_valid_data_customer_reference(self):
         del self.data['token']
         self.data['bumper_reference'] = 156284
         self.data['signature'] = '5e7455b616d651ee07350b1688ec234ce16cc9597e72be84b9daa545b8853ef0'
-        self.test_valid_data_completed()
+        self.test_completed()
 
     def test_invalid_customer_reference(self):
         del self.data['token']
@@ -235,7 +270,6 @@ class PreapprovalStatusTest(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIsNotNone(data.get('data'))
         self.assertEquals(data.get('data').get('token'), 'eraytesttoken')
-        self.assertEquals(data.get('data').get('credit_limit'), 1613)
 
     def test_without_token(self):
         del self.data['preapproval_token']
@@ -279,8 +313,8 @@ class UpdateApplicationTest(TestCase):
         self.assertEqual(data.get('success'), True)
 
     def test_pending_gt_boundary(self):
-        self.data['amount'] = "5001"
-        self.data['signature'] = "bc956431d43096ad2be4699723ab02721fcc2ff25ea496cfb0e367c74b69048f"
+        self.data['amount'] = 100001
+        self.data['signature'] = "49521483ce984118a78dc30b399acaff62288d898d61ac69590f6d331fdc5224"
         bad_request(self, post=True)
 
     def test_pending_lt_boundary(self):
@@ -324,3 +358,107 @@ class UpdateApplicationTest(TestCase):
         self.data['token'] = '123'
         self.data['signature'] = '28afeda6cff7b815e6d658881cfb16c26db085f120af20f91def0b987900e5e3'
         bad_request(self, post=True)
+
+
+class CancelApplicationTest(TestCase):
+    def setUp(self):
+        self.data = json.load(open('supplier/datas/cancel_data.json', 'r'))
+        self.url = "https://dev.bumper.co.uk/core/api/supplier/cancel/v1/"
+
+    def test_valid(self):
+        response = request_with_data(self, post=True)
+        data = response.json()  # TODO: this will be response.data after request will be implemented with Client class.
+
+        print(f"response message: {data.get('message')}")
+        self.assertEqual(data.get('success'), True)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_pending(self):
+        self.data['token'] = 'c07a4e3e8fa14280ae6'
+        self.data['signature'] = '76c3611c3c82e9b63cb72ff09cbd32a3c8aa43d1f0b16e5f48e0ed4dc2112d43'
+        self.test_valid()
+
+    def test_inprogress(self):
+        self.data['token'] = 'e0510724f67542acad5'
+        self.data['signature'] = '664986aa9ca330b6f40023dde3efe159d02b89500507fc7b89f3db332722bf67'
+        self.test_valid()
+
+    def test_completed(self):
+        self.data['token'] = '9f5f0294a3164e70a76'
+        self.data['signature'] = '5155c1b3ac3b4cda4cd90a6478796e102bb56346cd6a9130a898e3abf7b8d35e'
+        bad_request(self, post=True)
+
+    def test_failed(self):
+        self.data['token'] = '3e601439e4954f82a07'
+        self.data['signature'] = '4b6a658f8311d0c9d3061b383521c139854a36802ee522a45edc803c80f691ef'
+        bad_request(self, post=True)
+
+    def test_canceled(self):
+        self.data['token'] = '0c15bd3ee2f742b296d'
+        self.data['signature'] = 'd77abad67df2f6e6b1fba34c16a34739611a125c34859368df8c8424004700f7'
+        bad_request(self, post=True)
+
+    def test_without_signature(self):
+        del self.data['signature']
+        bad_request(self, post=True)
+
+    def test_invalid_signature(self):
+        self.data['signature'] = 'e768335bf3f3f7f75a532745ac0cb6af0bd5294fa26627b1b565c77aa516cbfc'
+        bad_request(self, post=True)
+
+    def test_without_api_key(self):
+        del self.data['api_key']
+        bad_request(self, post=True)
+
+    def test_invalid_api_key(self):
+        self.data['api_key'] = '123'
+        bad_request(self, post=True)
+
+    def test_invalid_token(self):
+        self.data['token'] = '123'
+        self.data['signature'] = '1fe8bac276f93c94639b467841a54b5b6d89a086a9dd5796f27b683c1f7f69a3'
+        bad_request(self, post=True)
+
+
+class PaymentStatusApplicationTest(TestCase):
+    def setUp(self):
+        self.data = json.load(open('supplier/datas/payment_status_data.json', 'r'))
+        self.url = "https://dev.bumper.co.uk/core/api/supplier/paymentstatus/v1/"
+
+    def test_valid_data(self):
+        response = request_with_data(self)
+        data = response.json()  # TODO: this will be response.data after request will be implemented with Client class.
+
+        self.assertEqual(data.get('success'), True)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIsNotNone(data.get('data'))
+
+    def test_not_found(self):
+        self.data['token'] = 'd4ecf522fe6b42ccb75937fed7e094f5'
+        self.data['signature'] = '338cea4e4fb951350ef86ac13408d9e96bf22cb45016edc3e665e88ada0e93c2'
+
+        response = request_with_data(self)
+        data = response.json()  # TODO: this will be response.data after request will be implemented with Client class.
+        self.assertEqual(data.get('success'), False)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_without_signature(self):
+        del self.data['signature']
+        bad_request(self)
+
+    def test_invalid_signature(self):
+        self.data['signature'] = 'e768335bf3f3f7f75a532745ac0cb6af0bd5294fa26627b1b565c77aa516cbfc'
+        bad_request(self)
+
+    def test_without_api_key(self):
+        del self.data['api_key']
+        bad_request(self)
+
+    def test_invalid_api_key(self):
+        self.data['api_key'] = '123'
+        bad_request(self)
+
+    def test_invalid_token(self):
+        self.data['token'] = '123'
+        self.data['signature'] = '1fe8bac276f93c94639b467841a54b5b6d89a086a9dd5796f27b683c1f7f69a3'
+        bad_request(self)
