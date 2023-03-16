@@ -1,0 +1,11 @@
+{
+    "amount": "1.00",
+    "api_key": "8SY7cxabh5GRLr8GHbrGvsR9",
+    "success_url": "http://www.supplier.com/success/",
+    "failure_url": "http://www.supplier.com/failure/",
+    "currency": "GBP",
+    "order_reference": "26352",
+    "registration": "L9DDH",
+    "signature": "3e20d304f006dc2f43b5eb9f2b5621dcd0502c642aa706c002ff1715ce73ae97",
+    "product_name": "insurance product"
+}
