@@ -1,23 +1,21 @@
-from django.test import TestCase
+from supplier.tests.custom_test_case import CustomTestCase
 
 from rest_framework import status
 
-from supplier.helpers import get_bad_request, request_with_data
-
-import json
+from supplier.tests.helpers import get_bad_request, request_with_data
 
 
-class ApplicationTest(TestCase):
-    def setUp(self):
-        self.data = json.load(open('supplier/datas/application_data.json', 'r'))
-        self.url = "https://dev.bumper.co.uk/core/api/supplier/application/v1/"
+class ApplicationTest(CustomTestCase):
+    data_file = 'application_data.json'
+    url = "https://dev.bumper.co.uk/core/api/supplier/application/v1/"
+    post = True
 
     def test_valid_data(self):
-        response = request_with_data(self, post=True)
+        response = request_with_data(self, self.post)
         data = response.json()  # TODO: this will be response.data after request will be implemented with Client class.
 
         print(f"response message: {data.get('message')}")
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(status.HTTP_200_OK, response.status_code)
         self.assertTrue(data.get('success'))
         self.assertIsNotNone(data.get('data').get('token'))
         self.assertIsNotNone(data.get('data').get('redirect_url'))
@@ -47,7 +45,7 @@ class ApplicationTest(TestCase):
         self.test_valid_data()
 
     def test_valid_data_with_preapproval_link(self):
-        del self.data['amount']
+        self.data.pop('amount')
         self.data['preapproval_link'] = True
         self.data['signature'] = '232e3c01c48e57849aab8448d5c5c828adeed9c29cc0b035a9f9320829547e46'
         self.test_valid_data()
@@ -55,88 +53,72 @@ class ApplicationTest(TestCase):
     def test_with_preapproval_and_amount(self):
         self.data['preapproval_link'] = True
         self.data['signature'] = '895aea5f8fdf2c37be30778f8c8ce4f477057ad2f5ad5c223e35e30dc92f633a'
-        get_bad_request(self, post=True)
+        get_bad_request(self, self.post)
 
     def test_valid_data_without_preapproval_link(self):
         self.data['preapproval_link'] = False
         self.data['signature'] = '7f3b4541362566f3a986fcf2f6059115dabd447fdbe5cbb2f640484514238e59'
         self.test_valid_data()
 
-    def test_without_api_key(self):
-        del self.data['api_key']
-        get_bad_request(self, post=True)
-
-    def test_invalid_api_key(self):
-        self.data['api_key'] = '123'
-        get_bad_request(self, post=True)
-
-    def test_without_signature(self):
-        del self.data['signature']
-        get_bad_request(self, post=True)
-
-    def test_invalid_signature(self):
-        self.data['signature'] = '123'
-        get_bad_request(self, post=True)
-
     def test_amount_gt_boundary(self):
         max_amount = 10000
         self.data['amount'] = max_amount + 1
         self.data['signature'] = "8e26f7e33d1f5a73c97ec608cc2d07d7d9aeace03debba45bc59a3293c681905"
-        get_bad_request(self, post=True)
+        get_bad_request(self, self.post)
 
     def test_amount_lt_boundary(self):
         min_amount = 1
         self.data['amount'] = min_amount - 1
         self.data['signature'] = "fffc54114f79ceb10fa4cc690895426aa789add451659f1219ef9a90f99e01cc"
-        get_bad_request(self, post=True)
+        get_bad_request(self, self.post)
 
     def test_without_currency(self):
-        del self.data['currency']
+        self.data.pop('currency')
         self.data['signature'] = 'c2bcf86448b1a99c3503387adff05d0f50889d7aae80219b5aca7bc85d970194'
-        get_bad_request(self, post=True)
+        get_bad_request(self, self.post)
 
     def test_invalid_currency(self):
-        self.data['currency'] = 'TL'
+        self.data['currency'] = 'TL'  # every currency can be passed
         self.data['signature'] = '4c5863ddd65ea334edb47cae138a6d103469e8c8216c9770b0bcd5a43386a409'
-        get_bad_request(self, post=True)
+        get_bad_request(self, self.post)
 
     def test_empty_product_description(self):
         self.data['product_description'] = []
-        get_bad_request(self, post=True)
+        get_bad_request(self, self.post)
 
     def test_without_item_product_description(self):
         self.data['product_description'] = [{
             "quantity": "2",
             "price": "150.00"
         }]
-        get_bad_request(self, post=True)
+        get_bad_request(self, self.post)
 
     def test_without_quantity_product_description(self):
         self.data['product_description'] = [{
             "item": "Pirelli Cinturato P7 Tyre",
             "price": "150.00"
         }]
-        get_bad_request(self, post=True)
+        get_bad_request(self, self.post)
 
     def test_without_price_product_description(self):
         self.data['product_description'] = [{
             "item": "Pirelli Cinturato P7 Tyre",
             "quantity": "2",
         }]
-        get_bad_request(self, post=True)
+        get_bad_request(self, self.post)
 
     def test_invalid_item_product_description(self):
         self.data['product_description'] = [{
-            "item": "invalid product item name",
+            "item": "invalid product item name",  # ?
             "quantity": "2",
             "price": "150.00"
         }]
-        get_bad_request(self, post=True)
+        get_bad_request(self, self.post)
 
     def test_national_id_number_len_gt_boundary(self):
         self.data['national_id_number'] = '0123456789101112'  # TODO: length of the id number > 15
         self.data['signature'] = 'abda2419e2ab28009322d9d497cea506ee8a6274d2a577a9cf692d612fc4d21c'
-        get_bad_request(self, post=True)
+        get_bad_request(self, self.post)
 
     def test_national_id_number(self):
         self.data['national_id_number'] = '123456789101112'
@@ -146,10 +128,10 @@ class ApplicationTest(TestCase):
     def test_dni_len_gt_boundary(self):
         self.data['dni'] = '0123456789101112'
         self.data['signature'] = 'fd2515f36b1550ef1d0c054741fde5dd79b5bd6a7e69f6e90e8844b7d40d13af'
-        get_bad_request(self, post=True)
+        get_bad_request(self, self.post)
 
     def test_dni(self):
-        self.data['dni'] = '123456789101112'
+        self.data['dni'] = '123456789101112'  # ?
         self.data['signature'] = 'c13d68a240f3ea8723a2fe83b7a9086573b7976f2f12245d49d25f22ba4b9475'
         self.test_valid_data()
 
@@ -172,19 +154,19 @@ class ApplicationTest(TestCase):
     def test_invalid_email(self):
         self.data['email'] = ''
         self.data['signature'] = '15556e887c8bf6c3ee775328f96f43d59d005939d93ef2a08a8d2fd1e787f749'
-        get_bad_request(self, post=True)
+        get_bad_request(self, self.post)
 
     def test_invalid_product_id(self):
-        self.data['product_id'] = '-1'
+        self.data['product_id'] = '-1'  # ?
         self.data['signature'] = '9fa976670d75085b229318283d1982c49419daa07577e5a1d4c59c0ef56b7424'
-        get_bad_request(self, post=True)
+        get_bad_request(self, self.post)
 
     def test_invalid_mobile(self):
         self.data['mobile'] = ''
         self.data['signature'] = '8b8c04df32ff4417a4c1affcbae60c46d64cea28ed8ca8ebaec1a3667e5295b9'
-        get_bad_request(self, post=True)
+        get_bad_request(self, self.post)
 
     def test_without_order_reference(self):
-        del self.data['order_reference']
+        self.data.pop('order_reference')
         self.data['signature'] = 'e6d7f670229577def1911b0e186ce584c1d3a032f49d0b67682d32993cebcbdb'
-        get_bad_request(self, post=True)
+        get_bad_request(self, self.post)
